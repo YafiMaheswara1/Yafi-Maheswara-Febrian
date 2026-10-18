@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kopi & Cerita - Cafe Menu & Admin</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            amber: {
+              50: '#fffbe1',
+              100: '#fef3c7',
+              200: '#fde68a',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+              950: '#451a03',
+            },
+            coffee: {
+              50: '#fdfbf7',
+              100: '#f7f2ea',
+              200: '#ebdccb',
+              500: '#a3714b',
+              600: '#8c5935',
+              700: '#6e4125',
+              800: '#4a2b16',
+              900: '#2d180b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f7f2ea;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c5a880;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #8c5935;
+    }
+  </style>
+</head>
+<body class="text-stone-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-40 bg-coffee-900 text-amber-50 shadow-md transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('customer')">
+        <div class="bg-amber-700 p-2 rounded-xl text-amber-100 flex items-center justify-center shadow-inner">
+          <i data-lucide="coffee" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight tracking-wide">Kopi & Cerita</h1>
+          <p class="text-xs text-amber-200/70">Cafe & Artisan Bakery</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons (Cart & Admin Switch) -->
+      <div class="flex items-center space-x-3">
+        <!-- View Switcher Button -->
+        <button id="viewToggleBtn" onclick="toggleAdminView()" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-stone-800 hover:bg-stone-700 text-amber-200 border border-amber-700/50 transition">
+          <i data-lucide="code" class="w-4 h-4"></i>
+          <span id="viewToggleText">Dev / Admin Panel</span>
+        </button>
+
+        <!-- Cart Button (Customer view only) -->
+        <button id="cartBtn" onclick="toggleCartDrawer()" class="relative bg-amber-700 hover:bg-amber-600 text-amber-50 p-2.5 rounded-xl transition flex items-center justify-center shadow-md">
+          <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+          <span id="cartBadge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-coffee-900 shadow">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ================================================================= -->
+    <!-- 1. CUSTOMER ORDERING VIEW                                         -->
+    <!-- ================================================================= -->
+    <div id="customerView" class="space-y-6">
+      
+      <!-- HERO BANNER -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-coffee-900 via-coffee-800 to-amber-900 text-amber-50 p-6 sm:p-8 shadow-lg">
+        <div class="relative z-10 max-w-xl">
+          <span class="inline-block bg-amber-700/60 backdrop-blur-md text-amber-200 text-xs px-3 py-1 rounded-full font-medium mb-3">
+            ✨ Selamat Datang di Kopi & Cerita
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Nikmati Rasa Terbaik Langsung dari Meja Anda</h2>
+          <p class="mt-2 text-sm sm:text-base text-amber-100/80">Pilih menu favorit Anda, tentukan kuantitas, dan lakukan pemesanan secara praktis!</p>
+        </div>
+        <div class="absolute -right-8 -bottom-10 opacity-15 text-amber-200 pointer-events-none">
+          <i data-lucide="coffee" class="w-64 h-64"></i>
+        </div>
+      </div>
+
+      <!-- SEARCH & CATEGORY FILTER SECTION -->
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/70 backdrop-blur-md p-4 rounded-xl border border-stone-200/80 shadow-sm">
+        
+        <!-- Search Input -->
+        <div class="relative w-full md:w-72">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"></i>
+          <input type="text" id="searchInput" oninput="renderProducts()" placeholder="Cari menu nikmat..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700/50 text-stone-800">
+        </div>
+
+        <!-- Categories horizontal list -->
+        <div class="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none" id="categoryButtonsContainer">
+          <!-- Dynamic category pills inserted here -->
+        </div>
+      </div>
+
+      <!-- PRODUCT GRID -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="currentCategoryTitle" class="text-lg font-bold text-stone-800 flex items-center space-x-2">
+            <span>Semua Menu</span>
+          </h3>
+          <span id="productCountBadge" class="text-xs bg-amber-100 text-amber-900 font-medium px-2.5 py-1 rounded-full">0 Produk</span>
+        </div>
+
+        <!-- Products Grid Container -->
+        <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <!-- Dynamic product cards will be injected here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyProducts" class="hidden text-center py-12 bg-white/50 rounded-2xl border border-dashed border-stone-300">
+          <i data-lucide="utensils-crossed" class="w-12 h-12 text-stone-400 mx-auto mb-3"></i>
+          <h4 class="font-semibold text-stone-700 text-base">Tidak ada menu ditemukan</h4>
+          <p class="text-xs text-stone-500 mt-1">Coba sesuaikan kata kunci pencarian atau kategori Anda.</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ================================================================= -->
+    <!-- 2. DEVELOPER / ADMIN MANAGEMENT DASHBOARD                         -->
+    <!-- ================================================================= -->
+    <div id="adminView" class="hidden space-y-6">
+      
+      <!-- ADMIN HEADER & BANNER -->
+      <div class="bg-stone-900 text-amber-100 rounded-2xl p-6 shadow-md border border-stone-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span>Developer Mode & Admin Control</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-white">Kelola Menu & Pengaturan Harga</h2>
+          <p class="text-xs text-stone-400 mt-1">Atur daftar produk, kuantitas minimum pembelian, harga, dan ketersediaan menu secara realtime.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Reset Sample Data Button -->
+          <button onclick="confirmResetData()" class="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-lg text-xs font-medium border border-stone-700 transition flex items-center space-x-1.5">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Reset Data Default</span>
+          </button>
+          
+          <!-- Add Product Modal Trigger Button -->
+          <button onclick="openProductModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow flex items-center space-x-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Tambah Menu Baru</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ADMIN STATS QUICK OVERVIEW -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm flex items-center space-x-3">
+          <div class="p-3 bg-amber-100 text-amber-800 rounded-lg">
+            <i data-lucide="coffee" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xs text-stone-500 font-medium">Total Menu</p>
+            <p id="statTotalItems" class="text-lg font-bold text-stone-800">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm flex items-center space-x-3">
+          <div class="p-3 bg-emerald-100 text-emerald-800 rounded-lg">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xs text-stone-500 font-medium">Tersedia</p>
+            <p id="statAvailableItems" class="text-lg font-bold text-stone-800">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm flex items-center space-x-3">
+          <div class="p-3 bg-rose-100 text-rose-800 rounded-lg">
+            <i data-lucide="x-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xs text-stone-500 font-medium">Habis / Inaktif</p>
+            <p id="statUnavailableItems" class="text-lg font-bold text-stone-800">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm flex items-center space-x-3">
+          <div class="p-3 bg-blue-100 text-blue-800 rounded-lg">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xs text-stone-500 font-medium">Total Kategori</p>
+            <p id="statCategories" class="text-lg font-bold text-stone-800">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PRODUCT MANAGEMENT TABLE -->
+      <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-stone-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-stone-50/50">
+          <h3 class="font-bold text-stone-800 text-base flex items-center space-x-2">
+            <i data-lucide="list" class="w-4 h-4 text-amber-700"></i>
+            <span>Daftar Kelola Menu</span>
+          </h3>
+          <div class="w-full sm:w-64 relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"></i>
+            <input type="text" id="adminSearchInput" oninput="renderAdminTable()" placeholder="Filter menu admin..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-700">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-stone-600">
+            <thead class="bg-stone-100/80 text-stone-700 font-semibold uppercase tracking-wider text-[11px] border-b border-stone-200">
+              <tr>
+                <th class="py-3 px-4">Gambar & Nama</th>
+                <th class="py-3 px-4">Kategori</th>
+                <th class="py-3 px-4">Harga (Rp)</th>
+                <th class="py-3 px-4 text-center">Min. Pembelian</th>
+                <th class="py-3 px-4 text-center">Status</th>
+                <th class="py-3 px-4 text-right">Aksi Developer</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody" class="divide-y divide-stone-100">
+              <!-- Admin table rows injected here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-stone-900 text-stone-400 text-xs py-6 border-t border-stone-800 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-2 text-stone-300">
+        <i data-lucide="coffee" class="w-4 h-4 text-amber-500"></i>
+        <span class="font-medium">Kopi & Cerita Sistem Pemesanan Online</span>
+      </div>
+      <p>© 2026 Developed with Developer Admin Dashboard Support</p>
+    </div>
+  </footer>
+
+
+  <!-- ================================================================= -->
+  <!-- MODALS & DRAWERS SECTION                                          -->
+  <!-- ================================================================= -->
+
+  <!-- 1. CART DRAWER (RIGHT SIDE SLIDE-OVER) -->
+  <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden transition-opacity duration-300">
+    <!-- Backdrop -->
+    <div onclick="toggleCartDrawer()" class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"></div>
+
+    <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+        
+        <!-- Cart Header -->
+        <div class="p-4 bg-coffee-900 text-amber-50 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="shopping-bag" class="w-5 h-5 text-amber-400"></i>
+            <h3 class="font-bold text-base">Keranjang Belanja</h3>
+          </div>
+          <button onclick="toggleCartDrawer()" class="p-1 rounded-lg hover:bg-white/10 text-stone-300 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Cart Items List -->
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-4 space-y-4 divide-y divide-stone-100">
+          <!-- Dynamic Cart Items injected here -->
+        </div>
+
+        <!-- Cart Empty State -->
+        <div id="cartEmptyState" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-16 h-16 bg-amber-50 text-amber-700 rounded-full flex items-center justify-center mb-3">
+            <i data-lucide="shopping-cart" class="w-8 h-8"></i>
+          </div>
+          <p class="font-semibold text-stone-800 text-sm">Keranjang Anda Masih Kosong</p>
+          <p class="text-xs text-stone-500 mt-1 max-w-xs">Silakan pilih menu favorit Anda di katalog produk untuk memulai pesanan.</p>
+        </div>
+
+        <!-- Cart Footer & Calculation -->
+        <div id="cartFooter" class="p-4 bg-stone-50 border-t border-stone-200 space-y-3 hidden">
+          <div class="space-y-1.5 text-xs text-stone-600">
+            <div class="flex justify-between">
+              <span>Subtotal</span>
+              <span id="cartSubtotal" class="font-medium text-stone-800">Rp 0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Pajak & Layanan Cafe (10%)</span>
+              <span id="cartTax" class="font-medium text-stone-800">Rp 0</span>
+            </div>
+            <div class="border-t border-stone-200 pt-2 flex justify-between text-sm font-bold text-stone-900">
+              <span>Total Pembayaran</span>
+              <span id="cartTotal" class="text-amber-800">Rp 0</span>
+            </div>
+          </div>
+
+          <button onclick="openCheckoutModal()" class="w-full py-3 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm">
+            <span>Lanjut ke Pembayaran</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 2. CHECKOUT FORM MODAL -->
+  <div id="checkoutModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <!-- Backdrop -->
+    <div onclick="closeCheckoutModal()" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-stone-200 z-10 space-y-5">
+        
+        <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+          <h3 class="text-lg font-bold text-stone-800 flex items-center space-x-2">
+            <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-700"></i>
+            <span>Detail Pemesanan</span>
+          </h3>
+          <button onclick="closeCheckoutModal()" class="p-1 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="checkoutForm" onsubmit="processOrder(event)" class="space-y-4 text-xs sm:text-sm">
+          <!-- Customer Name -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Nama Pemesan <span class="text-red-500">*</span></label>
+            <input type="text" id="custName" required placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+          </div>
+
+          <!-- Table Number -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Nomor Meja <span class="text-red-500">*</span></label>
+            <input type="text" id="tableNum" required placeholder="Contoh: Meja 08 / Takeaway" class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+          </div>
+
+          <!-- Payment Method -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Metode Pembayaran <span class="text-red-500">*</span></label>
+            <select id="paymentMethod" required class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+              <option value="QRIS Instant (GoPay/OVO/ShopeePay/Dana)">QRIS Instant (GoPay / OVO / Dana / ShopeePay)</option>
+              <option value="Tunai / Cash di Kasir">Tunai / Cash di Kasir</option>
+              <option value="Transfer Bank BCA/Mandiri">Transfer Bank (BCA / Mandiri)</option>
+            </select>
+          </div>
+
+          <!-- Special Request -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Catatan Khusus (Opsional)</label>
+            <textarea id="orderNotes" rows="2" placeholder="Contoh: Less ice, gula dipisah, dll." class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"></textarea>
+          </div>
+
+          <!-- Order Summary Quick Box -->
+          <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200/80 space-y-1 text-xs">
+            <div class="flex justify-between text-stone-600">
+              <span>Ringkasan Produk:</span>
+              <span id="checkoutItemCount" class="font-medium text-stone-800">0 Item</span>
+            </div>
+            <div class="flex justify-between text-stone-800 font-bold text-sm">
+              <span>Total Akhir:</span>
+              <span id="checkoutTotal" class="text-amber-800">Rp 0</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="w-full py-3 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-xl shadow transition flex items-center justify-center space-x-2">
+            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+            <span>Konfirmasi & Buat Pesanan</span>
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 3. LIVE ORDER RECEIPT / CONFIRMATION MODAL -->
+  <div id="receiptModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-stone-900/70 backdrop-blur-sm"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200 z-10 space-y-4">
+        
+        <!-- Status Header -->
+        <div class="text-center space-y-2">
+          <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+            <i data-lucide="check" class="w-6 h-6 stroke-[3]"></i>
+          </div>
+          <h3 class="text-xl font-extrabold text-stone-800">Pesanan Berhasil!</h3>
+          <p class="text-xs text-stone-500">Pesanan Anda telah kami terima dan sedang disiapkan barista/dapur.</p>
+        </div>
+
+        <!-- Receipt Box (Print style) -->
+        <div class="bg-stone-50 p-4 rounded-xl border border-dashed border-stone-300 font-mono text-xs space-y-3">
+          <div class="text-center border-b border-stone-200 pb-2">
+            <p class="font-bold text-stone-800 uppercase tracking-widest text-sm">KOPI & CERITA CAFE</p>
+            <p id="receiptDate" class="text-[10px] text-stone-500">2026-10-18 12:00</p>
+            <p id="receiptOrderId" class="text-[10px] font-bold text-amber-800 mt-0.5">ID: #ORD-99812</p>
+          </div>
+
+          <div class="space-y-1">
+            <p><strong>Pemesan:</strong> <span id="receiptCustName">-</span></p>
+            <p><strong>Lokasi:</strong> <span id="receiptTableNum">-</span></p>
+            <p><strong>Metode:</strong> <span id="receiptPayment">-</span></p>
+            <p id="receiptNotesContainer" class="text-stone-600 italic"><strong>Catatan:</strong> <span id="receiptNotes">-</span></p>
+          </div>
+
+          <div class="border-t border-stone-200 pt-2 space-y-1.5" id="receiptItemsList">
+            <!-- Receipt items inserted here -->
+          </div>
+
+          <div class="border-t border-stone-200 pt-2 space-y-1 text-right">
+            <p class="flex justify-between"><span>Subtotal:</span><span id="receiptSubtotal">Rp 0</span></p>
+            <p class="flex justify-between"><span>Pajak & Servis (10%):</span><span id="receiptTax">Rp 0</span></p>
+            <p class="flex justify-between font-bold text-stone-900 text-sm pt-1 border-t border-stone-200">
+              <span>TOTAL:</span><span id="receiptTotal" class="text-amber-800">Rp 0</span>
+            </p>
+          </div>
+        </div>
+
+        <button onclick="closeReceiptModal()" class="w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-semibold rounded-xl text-xs transition">
+          Selesai & Kembali ke Menu
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 4. DEVELOPER / ADMIN ADD & EDIT PRODUCT MODAL -->
+  <div id="productModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <!-- Backdrop -->
+    <div onclick="closeProductModal()" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-stone-200 z-10 space-y-4">
+        
+        <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+          <h3 id="productModalTitle" class="text-lg font-bold text-stone-800 flex items-center space-x-2">
+            <i data-lucide="plus-circle" class="w-5 h-5 text-amber-700"></i>
+            <span>Tambah Menu Baru</span>
+          </h3>
+          <button onclick="closeProductModal()" class="p-1 rounded-lg hover:bg-stone-100 text-stone-400">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="productForm" onsubmit="saveProduct(event)" class="space-y-3 text-xs sm:text-sm">
+          <input type="hidden" id="prodId">
+
+          <!-- Name -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Nama Produk / Menu <span class="text-red-500">*</span></label>
+            <input type="text" id="prodName" required placeholder="Contoh: Caramel Macchiato" class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Category -->
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">Kategori <span class="text-red-500">*</span></label>
+              <select id="prodCategory" required class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+                <option value="Coffee">Coffee</option>
+                <option value="Non-Coffee">Non-Coffee</option>
+                <option value="Makanan Utama">Makanan Utama</option>
+                <option value="Snack & Toast">Snack & Toast</option>
+                <option value="Dessert">Dessert</option>
+              </select>
+            </div>
+
+            <!-- Price -->
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">Harga (Rp) <span class="text-red-500">*</span></label>
+              <input type="number" id="prodPrice" required min="1000" step="500" placeholder="25000" class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Minimum Order Quantity -->
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">
+                Kuantitas Min. Pembelian <span class="text-red-500">*</span>
+              </label>
+              <input type="number" id="prodMinQty" required min="1" value="1" class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+              <span class="text-[10px] text-stone-500">Batasan minimum saat ditambahkan ke keranjang.</span>
+            </div>
+
+            <!-- Availability Status -->
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">Status Ketersediaan</label>
+              <select id="prodAvailable" class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+                <option value="true">Tersedia (Ready)</option>
+                <option value="false">Habis (Out of stock)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Image URL -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">URL Gambar Produk</label>
+            <input type="url" id="prodImage" placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700">
+            <div class="flex items-center space-x-2 mt-1">
+              <span class="text-[10px] text-stone-500">Preset Opsional:</span>
+              <button type="button" onclick="setPresetImg('coffee')" class="text-[10px] text-amber-700 underline">Kopi</button>
+              <button type="button" onclick="setPresetImg('noncoffee')" class="text-[10px] text-amber-700 underline">Non-Kopi</button>
+              <button type="button" onclick="setPresetImg('food')" class="text-[10px] text-amber-700 underline">Makanan</button>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Deskripsi Produk</label>
+            <textarea id="prodDesc" rows="2" placeholder="Jelaskan aroma, bahan, atau rasa khas produk..." class="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="pt-2 flex justify-end space-x-2">
+            <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 font-semibold rounded-lg text-xs transition">
+              Batal
+            </button>
+            <button type="submit" class="px-5 py-2 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition shadow">
+              Simpan Produk
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CUSTOM NOTIFICATION TOAST -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-stone-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-amber-600/50 flex items-center space-x-3 text-xs sm:text-sm">
+      <div id="toastIcon" class="text-amber-400">
+        <i data-lucide="info" class="w-5 h-5"></i>
+      </div>
+      <span id="toastMessage" class="font-medium">Pesan pemberitahuan</span>
+    </div>
+  </div>
+
+
+  <!-- ================================================================= -->
+  <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT                               -->
+  <!-- ================================================================= -->
+  <script>
+    // --- DEFAULT INITIAL DATA (SAMPLE PRODUCTS) ---
+    const DEFAULT_PRODUCTS = [
+      {
+        id: 'p1',
+        name: 'Espresso Artisan Single',
+        category: 'Coffee',
+        price: 18000,
+        minQty: 1,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=500&auto=format&fit=crop&q=80',
+        description: 'Ekstraksi kopi murni dengan aroma pekat, krema tebal, dan cita rasa kaya.'
+      },
+      {
+        id: 'p2',
+        name: 'Iced Milk Latte Aren',
+        category: 'Coffee',
+        price: 26000,
+        minQty: 1,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=500&auto=format&fit=crop&q=80',
+        description: 'Espresso house blend dipadu dengan susu segar manis gurih dan gula aren asli.'
+      },
+      {
+        id: 'p3',
+        name: 'Matcha Creamy Latte',
+        category: 'Non-Coffee',
+        price: 28000,
+        minQty: 1,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=500&auto=format&fit=crop&q=80',
+        description: 'Bubuk matcha Uji impor kualitas premium disajikan dingin dengan susu segar.'
+      },
+      {
+        id: 'p4',
+        name: 'Croissant Butter Melt',
+        category: 'Snack & Toast',
+        price: 22000,
+        minQty: 2, // Minimal 2 order example
+        available: true,
+        image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=80',
+        description: 'Pastry khas Perancis yang renyah di luar, lembut berlapis di dalam (Min. Order 2 Pcs).'
+      },
+      {
+        id: 'p5',
+        name: 'Nasi Goreng Rempah Cafe',
+        category: 'Makanan Utama',
+        price: 38000,
+        minQty: 1,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&auto=format&fit=crop&q=80',
+        description: 'Nasi goreng bumbu rempah spesial disajikan dengan telur ceplok dan kerupuk.'
+      },
+      {
+        id: 'p6',
+        name: 'Classic Chocolate Cake',
+        category: 'Dessert',
+        price: 32000,
+        minQty: 1,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80',
+        description: 'Kue cokelat panggang dengan lelehan ganache dark chocolate Belgia.'
+      }
+    ];
+
+    // --- GLOBAL APP STATE ---
+    let products = [];
+    let cart = []; // Array of { productId, qty }
+    let activeCategory = 'All';
+    let currentView = 'customer'; // 'customer' or 'admin'
+
+    // --- APPLICATION INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadProducts();
+      renderCategoryButtons();
+      renderProducts();
+      renderAdminTable();
+      updateCartUI();
+      lucide.createIcons();
+    });
+
+    // --- LOCAL STORAGE DATA MANAGERS ---
+    function loadProducts() {
+      const saved = localStorage.getItem('cafe_products_data');
+      if (saved) {
+        try {
+          products = JSON.parse(saved);
+        } catch (e) {
+          products = [...DEFAULT_PRODUCTS];
+        }
+      } else {
+        products = [...DEFAULT_PRODUCTS];
+        saveProducts();
+      }
+      updateStats();
+    }
+
+    function saveProducts() {
+      localStorage.setItem('cafe_products_data', JSON.stringify(products));
+      updateStats();
+    }
+
+    function confirmResetData() {
+      if (window.confirm("Apakah Anda yakin ingin mengembalikan daftar produk ke default awal? Perubahan kustom akan terhapus.")) {
+        products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+        saveProducts();
+        renderProducts();
+        renderAdminTable();
+        showToast("Data produk berhasil direset ke default!", "rotate-ccw");
+      }
+    }
+
+    // --- FORMATTERS ---
+    function formatIDR(amount) {
+      return 'Rp ' + Number(amount).toLocaleString('id-ID');
+    }
+
+    // --- VIEW SWITCHING LOGIC ---
+    function toggleAdminView() {
+      if (currentView === 'customer') {
+        switchView('admin');
+      } else {
+        switchView('customer');
+      }
+    }
+
+    function switchView(targetView) {
+      currentView = targetView;
+      const custViewEl = document.getElementById('customerView');
+      const adminViewEl = document.getElementById('adminView');
+      const toggleText = document.getElementById('viewToggleText');
+      const cartBtn = document.getElementById('cartBtn');
+
+      if (targetView === 'admin') {
+        custViewEl.classList.add('hidden');
+        adminViewEl.classList.remove('hidden');
+        toggleText.textContent = 'Kembali ke Menu Cafe';
+        cartBtn.classList.add('hidden');
+        renderAdminTable();
+      } else {
+        adminViewEl.classList.add('hidden');
+        custViewEl.classList.remove('hidden');
+        toggleText.textContent = 'Dev / Admin Panel';
+        cartBtn.classList.remove('hidden');
+        renderProducts();
+      }
+      lucide.createIcons();
+    }
+
+    // --- CUSTOMER VIEW: CATEGORIES & RENDERING ---
+    function getCategories() {
+      const cats = ['All'];
+      products.forEach(p => {
+        if (!cats.includes(p.category)) cats.push(p.category);
+      });
+      return cats;
+    }
+
+    function renderCategoryButtons() {
+      const container = document.getElementById('categoryButtonsContainer');
+      const categories = getCategories();
+
+      container.innerHTML = categories.map(cat => {
+        const isActive = activeCategory === cat;
+        const activeClass = isActive 
+          ? 'bg-amber-800 text-amber-50 shadow font-semibold' 
+          : 'bg-white text-stone-700 hover:bg-amber-100/60 border border-stone-200';
+
+        return `
+          <button onclick="selectCategory('${cat}')" class="px-3.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all duration-200 ${activeClass}">
+            ${cat === 'All' ? 'Semua Menu' : cat}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(cat) {
+      activeCategory = cat;
+      renderCategoryButtons();
+      renderProducts();
+      document.getElementById('currentCategoryTitle').innerText = cat === 'All' ? 'Semua Menu' : cat;
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const emptyState = document.getElementById('emptyProducts');
+      const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      // Filter products
+      const filtered = products.filter(p => {
+        const matchCat = activeCategory === 'All' || p.category === activeCategory;
+        const matchSearch = p.name.toLowerCase().includes(searchKeyword) || 
+                            p.description.toLowerCase().includes(searchKeyword);
+        return matchCat && matchSearch;
+      });
+
+      document.getElementById('productCountBadge').innerText = `${filtered.length} Produk`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      grid.innerHTML = filtered.map(prod => {
+        const cartItem = cart.find(c => c.productId === prod.id);
+        const currentQty = cartItem ? cartItem.qty : 0;
+        const minQty = prod.minQty || 1;
+
+        return `
+          <div class="bg-white rounded-2xl border border-stone-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden group">
+            
+            <!-- Image & Badges -->
+            <div class="relative h-44 overflow-hidden bg-stone-100">
+              <img src="${prod.image || 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=500'}" 
+                   alt="${prod.name}" 
+                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                   onerror="this.src='https://placehold.co/400x300/e2d9cd/5c3a21?text=Kopi+%26+Cerita'">
+              
+              <!-- Category Badge -->
+              <span class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-md text-amber-200 text-[10px] px-2.5 py-1 rounded-full font-medium">
+                ${prod.category}
+              </span>
+
+              <!-- Minimum Order Badge if > 1 -->
+              ${minQty > 1 ? `
+                <span class="absolute top-3 right-3 bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow">
+                  Min. order: ${minQty}
+                </span>
+              ` : ''}
+
+              <!-- Unavailable overlay -->
+              ${!prod.available ? `
+                <div class="absolute inset-0 bg-stone-900/70 backdrop-blur-[2px] flex items-center justify-center text-white font-bold text-xs uppercase tracking-wider">
+                  Stok Habis
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Content Body -->
+            <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+              <div>
+                <h4 class="font-bold text-stone-900 text-sm sm:text-base leading-snug line-clamp-1">${prod.name}</h4>
+                <p class="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">${prod.description || 'Menu lezat khas Kopi & Cerita.'}</p>
+              </div>
+
+              <div class="pt-2 border-t border-stone-100 flex items-center justify-between">
+                <div>
+                  <span class="text-xs text-stone-400 block font-normal">Harga</span>
+                  <span class="font-bold text-amber-900 text-sm sm:text-base">${formatIDR(prod.price)}</span>
+                </div>
+
+                <!-- Add to Cart / Quantity Controller -->
+                <div>
+                  ${!prod.available ? `
+                    <button disabled class="px-3 py-1.5 bg-stone-200 text-stone-400 text-xs rounded-lg cursor-not-allowed">Habis</button>
+                  ` : currentQty === 0 ? `
+                    <button onclick="addToCart('${prod.id}')" class="px-3.5 py-2 bg-amber-700 hover:bg-amber-600 text-amber-50 text-xs font-semibold rounded-xl shadow-sm transition flex items-center space-x-1">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                      <span>Tambah</span>
+                    </button>
+                  ` : `
+                    <div class="flex items-center space-x-1.5 bg-amber-50 border border-amber-300 p-1 rounded-xl">
+                      <button onclick="updateCartQty('${prod.id}', ${currentQty - 1})" class="w-6 h-6 bg-white border border-stone-300 hover:bg-stone-100 text-stone-800 rounded-lg flex items-center justify-center text-xs font-bold transition">
+                        -
+                      </button>
+                      <span class="text-xs font-bold text-amber-900 w-5 text-center">${currentQty}</span>
+                      <button onclick="updateCartQty('${prod.id}', ${currentQty + 1})" class="w-6 h-6 bg-amber-700 hover:bg-amber-600 text-white rounded-lg flex items-center justify-center text-xs font-bold transition">
+                        +
+                      </button>
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+
+    // --- CART LOGIC WITH MINIMUM ORDER QUANTITY RULES ---
+    function addToCart(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod || !prod.available) return;
+
+      const minQty = prod.minQty || 1;
+      cart.push({ productId: prod.id, qty: minQty });
+
+      showToast(`${prod.name} ditambahkan (${minQty}x min order)`, 'shopping-bag');
+      updateCartUI();
+      renderProducts();
+    }
+
+    function updateCartQty(productId, newQty) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      const minQty = prod.minQty || 1;
+      const cartIndex = cart.findIndex(c => c.productId === productId);
+
+      if (cartIndex > -1) {
+        if (newQty < minQty) {
+          // If trying to decrease below minimum order, remove item completely
+          cart.splice(cartIndex, 1);
+          showToast(`Item ${prod.name} dihapus dari keranjang`, 'trash-2');
+        } else {
+          cart[cartIndex].qty = newQty;
+        }
+      } else if (newQty >= minQty) {
+        cart.push({ productId, qty: newQty });
+      }
+
+      updateCartUI();
+      renderProducts();
+    }
+
+    function updateCartUI() {
+      const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+      const cartBadge = document.getElementById('cartBadge');
+
+      if (totalItemsCount > 0) {
+        cartBadge.innerText = totalItemsCount;
+        cartBadge.classList.remove('hidden');
+      } else {
+        cartBadge.classList.add('hidden');
+      }
+
+      renderCartDrawerItems();
+    }
+
+    function toggleCartDrawer() {
+      const drawer = document.getElementById('cartDrawer');
+      if (drawer.classList.contains('hidden')) {
+        drawer.classList.remove('hidden');
+      } else {
+        drawer.classList.add('hidden');
+      }
+    }
+
+    function renderCartDrawerItems() {
+      const container = document.getElementById('cartItemsContainer');
+      const emptyState = document.getElementById('cartEmptyState');
+      const footer = document.getElementById('cartFooter');
+
+      if (cart.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        footer.classList.add('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      footer.classList.remove('hidden');
+
+      let subtotal = 0;
+
+      container.innerHTML = cart.map(item => {
+        const prod = products.find(p => p.id === item.productId);
+        if (!prod) return '';
+
+        const itemTotal = prod.price * item.qty;
+        subtotal += itemTotal;
+        const minQty = prod.minQty || 1;
+
+        return `
+          <div class="pt-3 flex space-x-3">
+            <img src="${prod.image}" class="w-16 h-16 object-cover rounded-xl border border-stone-200" onerror="this.src='https://placehold.co/100?text=Kopi'">
+            <div class="flex-1 space-y-1">
+              <div class="flex justify-between items-start">
+                <h5 class="font-bold text-stone-800 text-xs sm:text-sm line-clamp-1">${prod.name}</h5>
+                <button onclick="updateCartQty('${prod.id}', 0)" class="text-stone-400 hover:text-red-600 transition">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+              
+              <div class="text-xs text-amber-900 font-semibold">${formatIDR(prod.price)}</div>
+
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-[10px] text-stone-500">Min: ${minQty} Pcs</span>
+                
+                <div class="flex items-center space-x-1.5 bg-stone-100 p-0.5 rounded-lg border border-stone-200">
+                  <button onclick="updateCartQty('${prod.id}', ${item.qty - 1})" class="w-5 h-5 bg-white hover:bg-stone-200 rounded flex items-center justify-center text-xs font-bold text-stone-700">
+                    -
+                  </button>
+                  <span class="text-xs font-bold px-1 text-stone-800">${item.qty}</span>
+                  <button onclick="updateCartQty('${prod.id}', ${item.qty + 1})" class="w-5 h-5 bg-white hover:bg-stone-200 rounded flex items-center justify-center text-xs font-bold text-stone-700">
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const tax = subtotal * 0.10;
+      const total = subtotal + tax;
+
+      document.getElementById('cartSubtotal').innerText = formatIDR(subtotal);
+      document.getElementById('cartTax').innerText = formatIDR(tax);
+      document.getElementById('cartTotal').innerText = formatIDR(total);
+
+      document.getElementById('checkoutItemCount').innerText = `${cart.reduce((s, i) => s + i.qty, 0)} Pcs`;
+      document.getElementById('checkoutTotal').innerText = formatIDR(total);
+
+      lucide.createIcons();
+    }
+
+
+    // --- CHECKOUT & RECEIPT LOGIC ---
+    function openCheckoutModal() {
+      if (cart.length === 0) return;
+      toggleCartDrawer();
+      document.getElementById('checkoutModal').classList.remove('hidden');
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').classList.add('hidden');
+    }
+
+    function processOrder(e) {
+      e.preventDefault();
+
+      const custName = document.getElementById('custName').value;
+      const tableNum = document.getElementById('tableNum').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      const notes = document.getElementById('orderNotes').value;
+
+      // Calculate totals
+      let subtotal = 0;
+      const receiptItemsList = cart.map(item => {
+        const prod = products.find(p => p.id === item.productId);
+        const itemTotal = prod.price * item.qty;
+        subtotal += itemTotal;
+        return `
+          <div class="flex justify-between text-stone-700">
+            <span>${prod.name} (x${item.qty})</span>
+            <span>${formatIDR(itemTotal)}</span>
+          </div>
+        `;
+      }).join('');
+
+      const tax = subtotal * 0.1;
+      const total = subtotal + tax;
+
+      // Fill Receipt Details
+      document.getElementById('receiptCustName').innerText = custName;
+      document.getElementById('receiptTableNum').innerText = tableNum;
+      document.getElementById('receiptPayment').innerText = paymentMethod;
+      document.getElementById('receiptNotes').innerText = notes || 'Tidak ada';
+      document.getElementById('receiptItemsList').innerHTML = receiptItemsList;
+      document.getElementById('receiptSubtotal').innerText = formatIDR(subtotal);
+      document.getElementById('receiptTax').innerText = formatIDR(tax);
+      document.getElementById('receiptTotal').innerText = formatIDR(total);
+
+      const now = new Date();
+      document.getElementById('receiptDate').innerText = now.toLocaleString('id-ID');
+      document.getElementById('receiptOrderId').innerText = `ID: #ORD-${Math.floor(10000 + Math.random() * 90000)}`;
+
+      // Reset cart & close checkout modal
+      cart = [];
+      updateCartUI();
+      renderProducts();
+      closeCheckoutModal();
+
+      // Show receipt modal
+      document.getElementById('receiptModal').classList.remove('hidden');
+      showToast('Pesanan berhasil dibuat!', 'check-circle');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.add('hidden');
+    }
+
+
+    // --- DEVELOPER / ADMIN DASHBOARD LOGIC (CRUD) ---
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      const keyword = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+
+      const filtered = products.filter(p => 
+        p.name.toLowerCase().includes(keyword) || p.category.toLowerCase().includes(keyword)
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 text-center text-stone-400">
+              Tidak ada produk ditemukan di panel admin.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(prod => {
+        return `
+          <tr class="hover:bg-stone-50 transition border-b border-stone-100">
+            <!-- Product Info -->
+            <td class="py-3 px-4 flex items-center space-x-3">
+              <img src="${prod.image}" class="w-10 h-10 object-cover rounded-lg border border-stone-200" onerror="this.src='https://placehold.co/100?text=Kopi'">
+              <div>
+                <p class="font-bold text-stone-800 text-xs sm:text-sm">${prod.name}</p>
+                <p class="text-[10px] text-stone-400 line-clamp-1 max-w-xs">${prod.description || '-'}</p>
+              </div>
+            </td>
+
+            <!-- Category -->
+            <td class="py-3 px-4">
+              <span class="bg-stone-100 text-stone-700 text-[10px] px-2 py-0.5 rounded font-medium border border-stone-200">
+                ${prod.category}
+              </span>
+            </td>
+
+            <!-- Price -->
+            <td class="py-3 px-4 font-bold text-stone-800">
+              ${formatIDR(prod.price)}
+            </td>
+
+            <!-- Min Quantity -->
+            <td class="py-3 px-4 text-center font-semibold text-amber-800">
+              ${prod.minQty || 1} Pcs
+            </td>
+
+            <!-- Availability Status Toggle -->
+            <td class="py-3 px-4 text-center">
+              <button onclick="toggleProductStatus('${prod.id}')" class="px-2.5 py-1 rounded-full text-[10px] font-bold transition ${prod.available ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}">
+                ${prod.available ? 'Tersedia' : 'Habis'}
+              </button>
+            </td>
+
+            <!-- Actions -->
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end space-x-2">
+                <button onclick="openProductModal('${prod.id}')" class="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition" title="Edit Produk">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="deleteProduct('${prod.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition" title="Hapus Produk">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function toggleProductStatus(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (prod) {
+        prod.available = !prod.available;
+        saveProducts();
+        renderAdminTable();
+        showToast(`Status ${prod.name} diperbarui`, 'refresh-cw');
+      }
+    }
+
+    function openProductModal(productId = null) {
+      const modal = document.getElementById('productModal');
+      const modalTitle = document.getElementById('productModalTitle');
+      const form = document.getElementById('productForm');
+
+      form.reset();
+
+      if (productId) {
+        // Edit Mode
+        const prod = products.find(p => p.id === productId);
+        if (!prod) return;
+
+        modalTitle.innerText = 'Edit Produk Menu';
+        document.getElementById('prodId').value = prod.id;
+        document.getElementById('prodName').value = prod.name;
+        document.getElementById('prodCategory').value = prod.category;
+        document.getElementById('prodPrice').value = prod.price;
+        document.getElementById('prodMinQty').value = prod.minQty || 1;
+        document.getElementById('prodAvailable').value = prod.available ? 'true' : 'false';
+        document.getElementById('prodImage').value = prod.image || '';
+        document.getElementById('prodDesc').value = prod.description || '';
+      } else {
+        // New Product Mode
+        modalTitle.innerText = 'Tambah Menu Baru';
+        document.getElementById('prodId').value = '';
+        document.getElementById('prodMinQty').value = 1;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.add('hidden');
+    }
+
+    function setPresetImg(type) {
+      const imgInput = document.getElementById('prodImage');
+      if (type === 'coffee') {
+        imgInput.value = 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=500&auto=format&fit=crop&q=80';
+      } else if (type === 'noncoffee') {
+        imgInput.value = 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=500&auto=format&fit=crop&q=80';
+      } else if (type === 'food') {
+        imgInput.value = 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&auto=format&fit=crop&q=80';
+      }
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('prodId').value;
+      const name = document.getElementById('prodName').value;
+      const category = document.getElementById('prodCategory').value;
+      const price = parseFloat(document.getElementById('prodPrice').value);
+      const minQty = parseInt(document.getElementById('prodMinQty').value) || 1;
+      const available = document.getElementById('prodAvailable').value === 'true';
+      let image = document.getElementById('prodImage').value.trim();
+      const description = document.getElementById('prodDesc').value;
+
+      if (!image) {
+        image = 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=500';
+      }
+
+      if (id) {
+        // Update existing product
+        const index = products.findIndex(p => p.id === id);
+        if (index > -1) {
+          products[index] = { id, name, category, price, minQty, available, image, description };
+          showToast(`Menu "${name}" berhasil diperbarui!`, 'check');
+        }
+      } else {
+        // Add new product
+        const newProduct = {
+          id: 'p_' + Date.now(),
+          name,
+          category,
+          price,
+          minQty,
+          available,
+          image,
+          description
+        };
+        products.push(newProduct);
+        showToast(`Menu baru "${name}" ditambahkan!`, 'plus');
+      }
+
+      saveProducts();
+      renderAdminTable();
+      renderCategoryButtons();
+      closeProductModal();
+    }
+
+    function deleteProduct(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      if (window.confirm(`Apakah Anda yakin ingin menghapus "${prod.name}" dari daftar menu?`)) {
+        products = products.filter(p => p.id !== productId);
+        
+        // Also remove from cart if present
+        cart = cart.filter(c => c.productId !== productId);
+        updateCartUI();
+
+        saveProducts();
+        renderAdminTable();
+        renderCategoryButtons();
+        showToast(`Menu "${prod.name}" berhasil dihapus`, 'trash');
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('statTotalItems').innerText = products.length;
+      document.getElementById('statAvailableItems').innerText = products.filter(p => p.available).length;
+      document.getElementById('statUnavailableItems').innerText = products.filter(p => !p.available).length;
+      document.getElementById('statCategories').innerText = getCategories().filter(c => c !== 'All').length;
+    }
+
+
+    // --- NOTIFICATION TOAST UTILITY ---
+    function showToast(message, iconName = 'info') {
+      const toast = document.getElementById('toastNotification');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.innerText = message;
+      toastIcon.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5"></i>`;
+      lucide.createIcons();
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
